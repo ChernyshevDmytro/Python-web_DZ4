@@ -2,6 +2,7 @@ import pathlib as pl
 import re
 import os
 import shutil
+import itertools
 from threading import Thread
 
 # Creating normalisation dictionary TRANS
@@ -9,10 +10,21 @@ CYRILLIC_SYMBOLS = "абвгдеёжзийклмнопрстуфхцчшщъыь
 TRANSLATION = ("a", "b", "v", "g", "d", "e", "e", "j", "z", "i", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u",
                "f", "h", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "u", "ja", "je", "ji", "g")
 
-TRANS = {}
+LIST_OF_IMAGES_SUFFIX = ['.JPEG', '.PNG', '.JPG', '.SVG']
+LIST_OF_VIDEO_SUFFIX = ['.AVI', '.MP4', '.MOV', '.MKV']
+LIST_OF_DOCUMENTS_SUFFIX = ['.DOC', '.DOCX', '.TXT', '.PDF', '.XLSX', '.PPTX']
+LIST_OF_AUDIO_SUFFIX = ['.MP3', '.OGG', '.WAV', '.AMR']
+LIST_OF_ARCHIVES_SUFFIX = ['.ZIP', '.GZ', '.TAR']
+list_of_known_suffix_general = list(itertools.chain(LIST_OF_IMAGES_SUFFIX, LIST_OF_VIDEO_SUFFIX,\
+    LIST_OF_DOCUMENTS_SUFFIX, LIST_OF_AUDIO_SUFFIX, LIST_OF_ARCHIVES_SUFFIX))
+
+print (f'I know follow suffix {list_of_known_suffix_general}')
+
+
+trans = {}
 for cyrillic, latin in zip(CYRILLIC_SYMBOLS, TRANSLATION):
-    TRANS[ord(cyrillic)] = latin
-    TRANS[ord(cyrillic.upper())] = latin.upper() 
+    trans[ord(cyrillic)] = latin
+    trans[ord(cyrillic.upper())] = latin.upper() 
 
 
 # Check if Path exists
@@ -37,7 +49,9 @@ def path_verification(path_to_folder):
 
         
 # List output of folders and files. Empty folders remove                 
-def find_files(valid_path_to_folder, founded_files=[], founded_folders=[]):       
+def find_files(valid_path_to_folder):       
+    founded_files=[]
+    founded_folders=[]
     path = pl.Path(valid_path_to_folder) 
                           
     for elements in path.iterdir():     
@@ -71,7 +85,7 @@ def normalize(founded_files,founded_folders, valid_path_to_folder):
 
         else:    
             a=i[0] 
-            a=i[0].translate(TRANS)
+            a=i[0].translate(trans)
             d=re.sub(r'(\W)', '_', fr"{a}")
             founded_files_normalized.append([fr"{d}", fr"{i[1]}", fr"{i[2]}"])
 
@@ -81,7 +95,7 @@ def normalize(founded_files,founded_folders, valid_path_to_folder):
             founded_folders_normalized.append(fr'{j}')
 
         else:
-            translated_path=j[path_length:].translate(TRANS)            
+            translated_path=j[path_length:].translate(trans)            
             translated_and_normalized_path=re.sub(r'[^\w^\\]', '_', fr"{translated_path}")
             founded_folders_normalized.append(fr'{j[0:path_length]}{translated_and_normalized_path}')     
           
@@ -109,8 +123,7 @@ def files_collect_images(founded_files, path_to_folder):
     list_of_images=[]
     for k in founded_files:
 
-        if (k[1].casefold()=='.JPEG'.casefold() or k[1].casefold()=='.PNG'.casefold() or k[1].casefold()=='.JPG'.casefold() or 
-        k[1].casefold()=='.SVG'.casefold()) and fr"{path_to_folder}\images" not in  fr"{k[2]}":            
+        if k[1].upper() in LIST_OF_IMAGES_SUFFIX and fr"{path_to_folder}\images" not in  fr"{k[2]}":            
             list_of_images.append(f"{k[0]}{k[1]}")
 
             if not pl.Path(fr"{path_to_folder}\images").exists():
@@ -121,11 +134,12 @@ def files_collect_images(founded_files, path_to_folder):
 
 
 def files_collect_video(founded_files, path_to_folder):
-    list_of_video=[]
+    list_of_video=[]    
+
     for k in founded_files:
         
-        if (k[1].casefold()=='.AVI'.casefold() or k[1].casefold()=='.MP4'.casefold() or k[1].casefold()=='.MOV'.casefold() or
-        k[1].casefold()=='.MKV'.casefold()) and fr"{path_to_folder}\video" not in  fr"{k[2]}":
+        if k[1].upper() in LIST_OF_VIDEO_SUFFIX and fr"{path_to_folder}\images" not in  fr"{k[2]}":            
+            list_of_video.append(f"{k[0]}{k[1]}")
 
             list_of_video.append(f"{k[0]}{k[1]}")
             if not pl.Path(fr"{path_to_folder}\video").exists():
@@ -135,13 +149,10 @@ def files_collect_video(founded_files, path_to_folder):
     print(f"List of video: {list_of_video}") 
 
 def files_collect_documents(founded_files, path_to_folder):
-
-    list_of_documents=[]
+    list_of_documents=[]    
     for k in founded_files:
         
-        if fr"{path_to_folder}\documents" not in fr"{k[2]}" and (k[1].casefold()=='.DOC'.casefold() or
-        k[1].casefold()=='.DOCX'.casefold() or k[1].casefold()=='.TXT'.casefold() or
-        k[1].casefold()=='.PDF'.casefold()) or k[1].casefold()=='.XLSX'.casefold() or k[1].casefold()=='.PPTX'.casefold():           
+        if k[1].upper() in LIST_OF_DOCUMENTS_SUFFIX and fr"{path_to_folder}\documents" not in fr"{k[2]}":        
             list_of_documents.append(f"{k[0]}{k[1]}")
             
             if not pl.Path(fr"{path_to_folder}\documents").exists():
@@ -155,8 +166,7 @@ def files_collect_audio(founded_files, path_to_folder):
     list_of_audio=[]
     for k in founded_files:
         
-        if (k[1].casefold()=='.MP3'.casefold() or k[1].casefold()=='.OGG'.casefold() or k[1].casefold()=='.WAV'.casefold()
-        or k[1].casefold()=='.AMR'.casefold()) and fr"{path_to_folder}\audio" not in  fr"{k[2]}":
+        if k[1].upper() in LIST_OF_AUDIO_SUFFIX and fr"{path_to_folder}\audio" not in  fr"{k[2]}":
             list_of_audio.append(f"{k[0]}{k[1]}")
 
             if not pl.Path(fr"{path_to_folder}\audio").exists():
@@ -169,8 +179,7 @@ def files_collect_archives(founded_files, path_to_folder):
     list_of_archives=[]
     for k in founded_files:
         
-        if (k[1].casefold()=='.ZIP'.casefold() or k[1].casefold()=='.GZ'.casefold() or k[1].casefold()=='.TAR'.casefold())\
-        and fr"{path_to_folder}\archives" not in  fr"{k[2]}":
+        if k[1].upper() in LIST_OF_ARCHIVES_SUFFIX and fr"{path_to_folder}\archives" not in  fr"{k[2]}":
             list_of_archives.append(f"{k[0]}{k[1]}") 
 
             if not pl.Path(fr"{path_to_folder}\archives").exists():
@@ -191,13 +200,7 @@ def files_collect_other_files(founded_files, path_to_folder):
         if 'archives' in k[2] or 'video' in k[2] or 'audio' in k[2] or 'documents' in k[2] or 'images' in k[2]:
             continue
 
-        elif    k[1].casefold()!='.ZIP'.casefold()  and k[1].casefold()!='.GZ'.casefold()   and k[1].casefold()!='.TAR'.casefold()\
-            and k[1].casefold()!='.MP3'.casefold()  and k[1].casefold()!='.OGG'.casefold()  and k[1].casefold()!='.WAV'.casefold()\
-            and k[1].casefold()!='.AMR'.casefold()  and k[1].casefold()!='.DOC'.casefold()  and k[1].casefold()!='.DOCX'.casefold()\
-            and k[1].casefold()!='.TXT'.casefold()  and k[1].casefold()!='.PDF'.casefold()  and k[1].casefold()!='.XLSX'.casefold()\
-            and k[1].casefold()!='.PPTX'.casefold() and k[1].casefold()!='.AVI'.casefold()  and k[1].casefold()!='.MP4'.casefold()\
-            and k[1].casefold()!='.MOV'.casefold()  and k[1].casefold()!='.MKV'.casefold()  and k[1].casefold()!='.JPEG'.casefold()\
-            and k[1].casefold()!='.PNG'.casefold()  and k[1].casefold()!='.JPG'.casefold()  and k[1].casefold()!='.SVG'.casefold() :      
+        elif k[1].upper() not in list_of_known_suffix_general:      
             
             list_of_other_files.append(f"{k[0]}{k[1]}")
             
@@ -206,7 +209,9 @@ def files_collect_other_files(founded_files, path_to_folder):
             list_of_unknown_suffix.add(k[1])
             
             os.replace(fr'{k[2]}{k[0]}{k[1]}' , fr"{path_to_folder}\other_files\{k[0]}{k[1]}")
-    list_of_known_suffix=list_of_known_suffix ^ list_of_unknown_suffix
+        elif k[1].upper() in list_of_known_suffix_general:
+            list_of_known_suffix.add(k[1])
+
 
     print(f"List of other files: {list_of_other_files}") 
     print (f"List of known suffix: {list_of_known_suffix}\nList of unknown suffix: {list_of_unknown_suffix}")       
@@ -254,6 +259,5 @@ def clean():
     thread_other.start()    
 
     del_empty_dirs(valid_path_to_folder)
-
 
 clean()
