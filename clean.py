@@ -49,7 +49,7 @@ def path_verification(path_to_folder):
 
         
 # List output of folders and files. Empty folders remove                 
-def find_files(valid_path_to_folder):       
+def to_find_files_in_user_path(valid_path_to_folder):       
     founded_files=[]
     founded_folders=[]
     path = pl.Path(valid_path_to_folder) 
@@ -67,7 +67,7 @@ def find_files(valid_path_to_folder):
         if elements.is_dir():            
             founded_folders.append(os.fspath(elements))
             path_to_folder_iterate=pl.Path(elements)
-            thread_find_folders = Thread(target=find_files, args=(path_to_folder_iterate,))
+            thread_find_folders = Thread(target=to_find_files_in_user_path, args=(path_to_folder_iterate,))
             thread_find_folders.start()
        
     return valid_path_to_folder, founded_files, founded_folders
@@ -102,14 +102,14 @@ def normalize(founded_files,founded_folders, valid_path_to_folder):
     return  founded_files_normalized, founded_folders_normalized
 
 
-def files_rename(founded_files_normalized, founded_files):
+def renaming_finded_files(founded_files_normalized, founded_files):
     for  founded_file, founded_file_normalized in zip(founded_files, founded_files_normalized): 
     
         if founded_file[0]!=founded_file_normalized[0]:
             os.rename( fr'{founded_file[2]}{founded_file[0]}{founded_file[1]}', fr'{founded_file[2]}{founded_file_normalized[0]}{founded_file_normalized[1]}')
 
 
-def folders_rename(founded_folders, founded_folders_normalized):
+def renaming_finded_folders(founded_folders, founded_folders_normalized):
    
     for  founded_folder, founded_folder_normalized in zip(founded_folders, founded_folders_normalized):
         
@@ -119,7 +119,7 @@ def folders_rename(founded_folders, founded_folders_normalized):
             os.rename( f'{founded_folder}', f'{founded_folder_normalized}')   
 
 
-def files_collect_images(founded_files, path_to_folder):
+def collecting_images(founded_files, path_to_folder):
     list_of_images=[]
     for k in founded_files:
 
@@ -133,7 +133,7 @@ def files_collect_images(founded_files, path_to_folder):
     print(f"List of images: {list_of_images}")    
 
 
-def files_collect_video(founded_files, path_to_folder):
+def collecting_video(founded_files, path_to_folder):
     list_of_video=[]    
 
     for k in founded_files:
@@ -148,7 +148,7 @@ def files_collect_video(founded_files, path_to_folder):
             os.replace(fr'{k[2]}{k[0]}{k[1]}' , fr"{path_to_folder}\video\{k[0]}{k[1]}")
     print(f"List of video: {list_of_video}") 
 
-def files_collect_documents(founded_files, path_to_folder):
+def collecting_documents(founded_files, path_to_folder):
     list_of_documents=[]    
     for k in founded_files:
         
@@ -162,7 +162,7 @@ def files_collect_documents(founded_files, path_to_folder):
     print(f"List of documents: {list_of_documents}")  
 
     
-def files_collect_audio(founded_files, path_to_folder):
+def collecting_audio(founded_files, path_to_folder):
     list_of_audio=[]
     for k in founded_files:
         
@@ -175,7 +175,7 @@ def files_collect_audio(founded_files, path_to_folder):
             os.replace(fr'{k[2]}{k[0]}{k[1]}' , fr"{path_to_folder}\audio\{k[0]}{k[1]}")  
     print(f"List of audio: {list_of_audio}")  
  
-def files_collect_archives(founded_files, path_to_folder):
+def collecting_archives(founded_files, path_to_folder):
     list_of_archives=[]
     for k in founded_files:
         
@@ -189,7 +189,7 @@ def files_collect_archives(founded_files, path_to_folder):
     print(f"List of archives: {list_of_archives}")  
 
 
-def files_collect_other_files(founded_files, path_to_folder):
+def collecting_other_files(founded_files, path_to_folder):
     list_of_unknown_suffix=set()
     list_of_known_suffix=set()
     
@@ -230,34 +230,23 @@ def del_empty_dirs(valid_path_to_folder):
             and 'audio' not in item_path and 'documents' not in item_path and 'images' not in item_path:
                 os.rmdir(item_path)
 
+
+collect_functions = [collecting_images, collecting_video, collecting_documents, collecting_audio, collecting_archives, collecting_other_files]
+
 def clean():
     
     path_to_folder = input('Enter path to folder:')   
     valid_path_to_folder=path_verification(path_to_folder)         
-    valid_path_to_folder, founded_files, founded_folders = find_files(valid_path_to_folder)    
+    valid_path_to_folder, founded_files, founded_folders = to_find_files_in_user_path(valid_path_to_folder)    
     founded_files_normalized, founded_folders_normalized= normalize(founded_files,founded_folders, valid_path_to_folder)
 
-    files_rename(founded_files_normalized, founded_files)
-    folders_rename(founded_folders, founded_folders_normalized)
+    renaming_finded_files(founded_files_normalized, founded_files)
+    renaming_finded_folders(founded_folders, founded_folders_normalized)
  
-    thread_img = Thread(target=files_collect_images(founded_files_normalized, valid_path_to_folder))
-    thread_img.start()
-    
-    thread_video = Thread(target=files_collect_video(founded_files_normalized, valid_path_to_folder))
-    thread_video.start()
-
-    thread_doc = Thread(target=files_collect_documents(founded_files_normalized, valid_path_to_folder))
-    thread_doc.start()
-
-    thread_audio = Thread(target=files_collect_audio(founded_files_normalized, valid_path_to_folder))
-    thread_audio.start()
-
-    thread_arch = Thread(target=files_collect_archives(founded_files_normalized, valid_path_to_folder))
-    thread_arch.start()
-    
-    thread_other = Thread(target=files_collect_other_files(founded_files_normalized, valid_path_to_folder))
-    thread_other.start()    
-
+    for i in range(len(collect_functions)):        
+        thread = Thread(target=collect_functions[i], args=(founded_files_normalized, valid_path_to_folder,))
+        thread.start()
+  
     del_empty_dirs(valid_path_to_folder)
 
 clean()
