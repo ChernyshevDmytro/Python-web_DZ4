@@ -119,7 +119,7 @@ def renaming_finded_folders(founded_folders, founded_folders_normalized):
             os.rename( f'{founded_folder}', f'{founded_folder_normalized}')   
 
 
-def collecting_images(founded_files, path_to_folder):
+def moving_pictures_to_separate_folder(founded_files, path_to_folder):
     list_of_images=[]
     for k in founded_files:
 
@@ -133,7 +133,7 @@ def collecting_images(founded_files, path_to_folder):
     print(f"List of images: {list_of_images}")    
 
 
-def collecting_video(founded_files, path_to_folder):
+def moving_video_to_separate_folder(founded_files, path_to_folder):
     list_of_video=[]    
 
     for k in founded_files:
@@ -148,7 +148,7 @@ def collecting_video(founded_files, path_to_folder):
             os.replace(fr'{k[2]}{k[0]}{k[1]}' , fr"{path_to_folder}\video\{k[0]}{k[1]}")
     print(f"List of video: {list_of_video}") 
 
-def collecting_documents(founded_files, path_to_folder):
+def moving_documents_to_separate_folder(founded_files, path_to_folder):
     list_of_documents=[]    
     for k in founded_files:
         
@@ -162,7 +162,7 @@ def collecting_documents(founded_files, path_to_folder):
     print(f"List of documents: {list_of_documents}")  
 
     
-def collecting_audio(founded_files, path_to_folder):
+def moving_audio_to_separate_folder(founded_files, path_to_folder):
     list_of_audio=[]
     for k in founded_files:
         
@@ -175,7 +175,7 @@ def collecting_audio(founded_files, path_to_folder):
             os.replace(fr'{k[2]}{k[0]}{k[1]}' , fr"{path_to_folder}\audio\{k[0]}{k[1]}")  
     print(f"List of audio: {list_of_audio}")  
  
-def collecting_archives(founded_files, path_to_folder):
+def moving_archives_to_separate_folder(founded_files, path_to_folder):
     list_of_archives=[]
     for k in founded_files:
         
@@ -189,7 +189,7 @@ def collecting_archives(founded_files, path_to_folder):
     print(f"List of archives: {list_of_archives}")  
 
 
-def collecting_other_files(founded_files, path_to_folder):
+def moving_other_filesto_separate_folder(founded_files, path_to_folder):
     list_of_unknown_suffix=set()
     list_of_known_suffix=set()
     
@@ -231,7 +231,7 @@ def del_empty_dirs(valid_path_to_folder):
                 os.rmdir(item_path)
 
 
-collect_functions = [collecting_images, collecting_video, collecting_documents, collecting_audio, collecting_archives, collecting_other_files]
+collect_functions = [moving_pictures_to_separate_folder, moving_video_to_separate_folder, moving_documents_to_separate_folder, moving_audio_to_separate_folder, moving_archives_to_separate_folder, moving_other_filesto_separate_folder]
 
 def clean():
     
@@ -243,8 +243,8 @@ def clean():
     renaming_finded_files(founded_files_normalized, founded_files)
     renaming_finded_folders(founded_folders, founded_folders_normalized)
  
-    for i in range(len(collect_functions)):        
-        thread = Thread(target=collect_functions[i], args=(founded_files_normalized, valid_path_to_folder,))
+    for i in collect_functions:        
+        thread = Thread(target=i, args=(founded_files_normalized, valid_path_to_folder,))
         thread.start()
   
     del_empty_dirs(valid_path_to_folder)
